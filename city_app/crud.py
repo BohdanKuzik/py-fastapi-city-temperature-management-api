@@ -1,11 +1,12 @@
 from sqlalchemy.orm import Session
 
-from city_app.schemas import CityCreate, CityList
-from models import City
+from city_app.schemas import CityCreate
+from city_app.models import City
 
 
 def get_city(db: Session, city_id: int):
-    return db.query(City).filter(City.id == city_id).first()
+    city = db.query(City).filter(City.id == city_id).first()
+    return city
 
 
 def get_all_cities(db: Session):
@@ -21,6 +22,16 @@ def create_city(db: Session, city: CityCreate):
     db.commit()
     db.refresh(db_city)
     return db_city
+
+
+def update_city(db: Session, city_id: int, city_data: CityCreate):
+    city = db.query(City).filter(City.id == city_id).first()
+    city.name = city_data.name
+    city.additional_info = city_data.additional_info
+
+    db.commit()
+    db.refresh(city)
+    return city
 
 
 def delete_city(db: Session, city_id: int):

@@ -10,7 +10,7 @@ class CityCreate(CityBase):
     pass
 
 
-class CityList(BaseModel):
+class CityList(CityBase):
     id: int
 
     class Config:
