@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dependencies import get_db
 from temperature_app import crud as temperature_crud
 from city_app import crud as city_crud
-from temperature_app.schemas import TemperatureList, TemperatureCreate
+from temperature_app import schemas
 
 load_dotenv()
 API_KEY = os.getenv("WEATHER_API_KEY")
@@ -19,17 +19,12 @@ API_KEY = os.getenv("WEATHER_API_KEY")
 router = APIRouter()
 
 
-@router.get("/temperatures/", response_model=list[TemperatureList])
+@router.get("/temperatures/", response_model=list[schemas.TemperatureList])
 async def read_temperatures(
-    city_id: int = None,
+    city_id: int | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    if city_id:
-        temperatures = await temperature_crud.get_temperature_by_city_id(
-            db, city_id=city_id
-        )
-    else:
-        temperatures = await temperature_crud.get_all_temperatures(db)
+    temperatures = await temperature_crud.get_all_temperatures(db, city_id)
     return temperatures
 
 
@@ -55,7 +50,7 @@ async def fetch_temperature(city_name: str) -> float:
 
 
 @router.post(
-    "/temperatures/update/", response_model=List[TemperatureList]
+    "/temperatures/update/", response_model=List[schemas.TemperatureList]
 )
 async def update_temperatures(db: AsyncSession = Depends(get_db)):
     cities = await city_crud.get_all_cities(db)
@@ -63,7 +58,7 @@ async def update_temperatures(db: AsyncSession = Depends(get_db)):
 
     async def fetch_and_store(city):
         temperature = await fetch_temperature(city.name)
-        db_temperature = TemperatureCreate(
+        db_temperature = schemas.TemperatureCreate(
             city_id=city.id, date_time=datetime.now(), temperature=temperature
         )
         return await temperature_crud.create_temperature(db, db_temperature)
